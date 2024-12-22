@@ -5,6 +5,7 @@
 - a chrome debugging client passes the request to chrome after some source map stuff
 - uses the `yo code` extension skeleton setup
 
+
 things to do to get it to work:
 - close all chrome windows/tabs so you can start a session in debug mode
 - in a terminal run `chrome --remote-debugging-port=9222`
@@ -28,3 +29,20 @@ things to do to get it to work:
 - in the extension host, run the "Launch CLJS debugger"
 - your chrome session should be at the URL specified
 - you may have to reload the page; check the debug console; the page should trip on your breakpoint at some point
+
+
+#### TODO
+- reduce the steps to get this running
+    - passing in URL
+    - when you get breakpoint from vscode, need to ask the debugger to re-read that file?
+        - you can bypass `Debugger.scriptParsed` if you know the url and the source map info? use `setBreakpointByUrl` directly?
+- add features
+    - send debug data back to vscode
+    - pause on line in vscode
+- the sourcemap reading is janky
+
+#### Ideas
+- seems possible that the debugger itself should be a standalone project/process and this should house the debug adapter?
+- integrate w/ shadow?
+
+
