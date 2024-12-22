@@ -2,6 +2,32 @@ import CDP from 'chrome-remote-interface';
 import fetch from "node-fetch-commonjs";
 import { SourceMapConsumer, RawSourceMap } from 'source-map';
 
+interface Target {
+    description: string;
+    devtoolsFrontendUrl: string;
+    id: string;
+    title: string;
+    type: string;
+    url: string;
+    webSocketDebuggerUrl: string;
+}
+
+async function getWebSocketDebuggerUrl(targetUrl: string): Promise<string | null> {
+    const response = await fetch('http://localhost:9222/json');
+    if (!response.ok) {
+        console.error(`Failed to fetch targets: ${response.status} ${response.statusText}`);
+        return null;
+    }
+
+    const targets = (await response.json()) as Target[];
+
+    for (const target of targets) {
+        if (target.url.toLowerCase().includes(targetUrl.toLowerCase())) {
+            return target.webSocketDebuggerUrl;
+        }
+    }
+    return null;
+}
 
 export class DebuggerUtils {
     private client: any;
@@ -11,8 +37,15 @@ export class DebuggerUtils {
 
     constructor() {}
 
-    async initialize(url: String): Promise<void> {
-        this.client = await CDP();
+    async initialize(url: string): Promise<void> {
+        const webSocketDebuggerUrl = await getWebSocketDebuggerUrl(url);
+        if (!webSocketDebuggerUrl) {
+            console.error('Target not found');
+            return;
+        }
+
+        this.client = await CDP({ target: webSocketDebuggerUrl });
+
         this.Debugger = this.client.Debugger;
         this.Page = this.client.Page;
         this.Runtime = this.client.Runtime;
@@ -21,8 +54,8 @@ export class DebuggerUtils {
         await this.Debugger.enable();
         await this.Runtime.enable();
 
-        this.Page.navigate({url: url});
-        await this.Page.loadEventFired();
+        // this.Page.navigate({url: url});
+        // await this.Page.loadEventFired();
 
         console.log('Page loaded');
     }
